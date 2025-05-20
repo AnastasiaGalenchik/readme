@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Скопировать Текст C фото</title>
+    <title>Загрузите изображение с текстом</title> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,12 +47,6 @@
             font-weight: bold;
             margin-bottom: 10px;
         }
-        .or-text {
-            margin: 15px 0;
-            text-align: center;
-            font-weight: bold;
-            color: #7f8c8d;
-        }
         .drag-drop {
             margin-top: 15px;
             font-size: 14px;
@@ -74,6 +68,7 @@
             border-radius: 5px;
             background-color: #f8f9fa;
             min-height: 100px;
+            white-space: pre-wrap; 
         }
         .divider {
             border-top: 1px solid #eee;
@@ -82,7 +77,7 @@
     </style>
 </head>
 <body>
-    <h1>Скопировать Текст C фото</h1>
+    <h1>Загрузите изображение с текстом</h1> 
     
     <div class="description">
         Бесплатный онлайн-преобразователь изображений в текст.
@@ -93,11 +88,11 @@
     <label for="imageInput">
         <div class="upload-container" id="dropArea">
             <div class="upload-icon">+</div>
-            <div class="upload-text">Загрузить Изображение</div>
+            <div class="upload-text">Загрузить изображение</div> 
             <div class="drag-drop">Перетащите/вставьте (Ctrl+V)</div>
         </div>
     </label>
-    <input type="file" id="imageInput" accept="image/*, .pdf">
+    <input type="file" id="imageInput" accept="image/*,.pdf"> 
     
     <div class="supported-formats">
         Файл поддерживается: PNG, JPG, JPEG
@@ -110,12 +105,12 @@
         const imageInput = document.getElementById('imageInput');
         const resultDiv = document.getElementById('result');
 
-        // Обработка клика по области загрузки
+        // Обработка клика по области загрузки 
         dropArea.addEventListener('click', () => {
             imageInput.click();
         });
 
-        // Обработка перетаскивания файлов
+        // Обработка перетаскивания файлов 
         dropArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropArea.style.backgroundColor = '#e8f4fc';
@@ -138,25 +133,27 @@
             }
         });
 
-        // Обработка вставки из буфера обмена
+        // Обработка вставки из буфера обмена 
         document.addEventListener('paste', (e) => {
             const items = e.clipboardData.items;
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
                     const blob = items[i].getAsFile();
-                    const file = new File([blob], 'pasted-image.png', { type: 'image/png' });
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(file);
-                    imageInput.files = dataTransfer.files;
-                    processImage();
-                    break;
+                    if (blob) { 
+                        const file = new File([blob], 'pasted-image.png', { type: 'image/png' });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        imageInput.files = dataTransfer.files;
+                        processImage();
+                        break;
+                    }
                 }
             }
         });
 
-        // Обработка выбранного файла
+        // Обработка выбранного файла 
         imageInput.addEventListener('change', () => {
-            if (imageInput.files.length) {
+            if (imageInput.files && imageInput.files.length) { 
                 processImage();
             }
         });
@@ -164,7 +161,7 @@
         async function processImage() {
             const file = imageInput.files[0];
             if (!file) return;
-
+            
             resultDiv.textContent = "Идёт распознавание...";
 
             try {
@@ -176,7 +173,15 @@
                     body: formData
                 });
                 
+                if (!response.ok) { 
+                    throw new Error(`Ошибка сервера: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                if (!data.text) { 
+                    throw new Error('Сервер не вернул текст');
+                }
+                
                 resultDiv.textContent = data.text;
 
                 // Автосохранение в файл
@@ -184,9 +189,13 @@
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
                 a.download = 'result.txt';
+                document.body.appendChild(a); 
                 a.click();
+                document.body.removeChild(a); 
+                URL.revokeObjectURL(a.href); 
             } catch (error) {
                 resultDiv.textContent = "Ошибка: " + error.message;
+                console.error('Ошибка при обработке изображения:', error);
             }
         }
     </script>
