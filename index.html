@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Локальный OCR</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        #result { 
+            white-space: pre-wrap; 
+            background: #f5f5f5; 
+            padding: 10px; 
+            margin-top: 10px;
+            border: 1px dashed #ccc;
+        }
+        button { padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <h1>Загрузите изображение с текстом</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="processImage()">Распознать текст</button>
+    <div id="result"></div>
+
+    <script>
+        async function processImage() {
+            const file = document.getElementById('imageInput').files[0];
+            if (!file) return alert('Выберите файл!');
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = "Идёт распознавание...";
+
+            try {
+                const response = await fetch('http://localhost:8000/ocr', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                resultDiv.textContent = data.text;
+
+                // Автосохранение в файл
+                const blob = new Blob([data.text], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'result.txt';
+                a.click();
+            } catch (error) {
+                resultDiv.textContent = "Ошибка: " + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
